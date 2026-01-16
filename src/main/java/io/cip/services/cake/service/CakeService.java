@@ -13,8 +13,6 @@ import org.springframework.stereotype.Service;
 
 import java.util.Comparator;
 
-import static java.util.stream.Collectors.toList;
-
 @RequiredArgsConstructor
 @Slf4j
 @Service
@@ -23,10 +21,13 @@ public class CakeService {
     private final CakeRepository cakeRepository;
 
     public CakesResponse getCakes() {
-        return new CakesResponse(cakeRepository.findAll().stream()
+        return new CakesResponse(cakeRepository
+                .findAll()
+                .stream()
                 .map(this::cakeResponse)
                 .sorted(Comparator.comparing(CakeResponse::title))
-                .collect(toList()));
+                .toList()
+        );
     }
 
     public CakeResponse getCakeById(long cakeId) {
@@ -34,24 +35,26 @@ public class CakeService {
     }
 
     public CakeResponse createCake(CreateCakeRequest createCakeRequest) {
-        Cake cake = cakeRepository.save(Cake.builder()
-                .title(createCakeRequest.title())
-                .description(createCakeRequest.description())
-                .build());
+        final var cake = cakeRepository.save(
+                Cake.builder()
+                        .title(createCakeRequest.title())
+                        .description(createCakeRequest.description())
+                        .build()
+        );
         return cakeResponse(cake);
     }
 
     public CakeResponse updateCake(long cakeId, UpdateCakeRequest updateCakeRequest) {
-        Cake existingCake = findExistingCake(cakeId);
+        final var existingCake = findExistingCake(cakeId);
 
-        Cake updateCake = cakeRepository.save(
+        final var updatedCake = cakeRepository.save(
                 existingCake.toBuilder()
                         .title(updateCakeRequest.title())
                         .description(updateCakeRequest.description())
                         .build()
         );
 
-        return cakeResponse(updateCake);
+        return cakeResponse(updatedCake);
     }
 
     public void deleteCake(long cakeId) {
@@ -59,10 +62,12 @@ public class CakeService {
     }
 
     private Cake findExistingCake(long cakeId) {
-        return cakeRepository.findById(cakeId).orElseThrow(() -> {
-            log.error("cake with id not found {}", cakeId);
-            throw new CakeNotFoundException();
-        });
+        return cakeRepository
+                .findById(cakeId)
+                .orElseThrow(() -> {
+                    log.error("cake with id not found {}", cakeId);
+                    return new CakeNotFoundException();
+                });
     }
 
     private CakeResponse cakeResponse(Cake cake) {
