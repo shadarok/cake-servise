@@ -35,11 +35,10 @@ class CakeControllerTest {
 
 
     @Nested
-    public class GetCakes {
+    class GetCakes {
 
         @Test
         void returnsNoCakesWhenNoCakesArePresentInDatabase() {
-
             getCakesRequest()
                     .headers(CakeControllerTest.this::withBasicAuth)
                     .exchange()
@@ -101,7 +100,7 @@ class CakeControllerTest {
     }
 
     @Nested
-    public class GetCakeById {
+    class GetCakeById {
 
         @Test
         void getCakeById() {
@@ -154,7 +153,7 @@ class CakeControllerTest {
     }
 
     @Nested
-    public class CreateCake {
+    class CreateCake {
 
         @Test
         void createCake() {
@@ -174,9 +173,10 @@ class CakeControllerTest {
                     .jsonPath("$.title").isEqualTo("new title")
                     .jsonPath("$.description").isEqualTo("new description")
                     .jsonPath("$.id").value(id -> {
-                        Cake savedCake = cakeRepository.findById(parseLong(id.toString())).get();
+                        final var cakeId = parseLong(id.toString());
+                        final var savedCake = cakeRepository.findById(cakeId).get();
                         assertThat(savedCake)
-                                .isEqualTo(new Cake(parseLong(id.toString()), "new title", "new description"));
+                                .isEqualTo(new Cake(cakeId, "new title", "new description"));
                     });
         }
 
@@ -215,7 +215,7 @@ class CakeControllerTest {
     }
 
     @Nested
-    public class UpdateCake {
+    class UpdateCake {
 
         @Test
         void updateCake() {
@@ -233,7 +233,7 @@ class CakeControllerTest {
                     .expectStatus().isNoContent()
                     .expectBody().isEmpty();
 
-            Cake savedCake = cakeRepository.findById(cakeId).get();
+            final Cake savedCake = cakeRepository.findById(cakeId).get();
             assertThat(savedCake).isEqualTo(new Cake(cakeId, "updated title", "updated description"));
         }
 
@@ -287,7 +287,7 @@ class CakeControllerTest {
     }
 
     @Nested
-    public class DeleteCake {
+    class DeleteCake {
 
         @Test
         void deleteCake() {
