@@ -71,7 +71,7 @@ _**Important**_: swagger/openapi dependency for spring-boot 3 is now `springdoc-
 All APIs are secured using basic auth. Use the following credentials when making requests:
 ```
 username=cake-user
-password=cake-password-which-should-be-kept-in-a-secret-place-and-injected-when-application-is-deployed
+password=cake-password
 ```
 
 * GET /cakes
