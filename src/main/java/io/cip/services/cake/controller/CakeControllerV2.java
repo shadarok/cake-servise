@@ -2,14 +2,9 @@ package io.cip.services.cake.controller;
 
 import io.cip.services.cake.exception.CakeNotFoundException;
 import io.cip.services.cake.model.cake.CakeResponse;
-import io.cip.services.cake.model.cake.CakesResponse;
-import io.cip.services.cake.model.cake.CreateCakeRequest;
-import io.cip.services.cake.model.cake.UpdateCakeRequest;
-import io.cip.services.cake.service.CakeService;
 import io.cip.services.cake.service.ExternalCakeService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Mono;
 
