@@ -1,5 +1,6 @@
 package io.cip.services.cake.service;
 
+import io.cip.services.cake.exception.CakeNotFoundException;
 import io.cip.services.cake.model.cake.CakeResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -23,9 +24,9 @@ public class ExternalCakeService {
     public Mono<CakeResponse> getCakeById(long id) {
         return client
                 .get()
-                .uri(externalProviderUrl, Map.of("id", id))
+                .uri(externalProviderUrl + "/{id}", Map.of("id", id))
                 .retrieve()
                 .bodyToMono(CakeResponse.class)
-                .onErrorResume(Mono::error);
+                .onErrorResume(ex -> Mono.error(new CakeNotFoundException()));
     }
 }
