@@ -33,12 +33,11 @@ class CakeControllerTest {
         cakeRepository.deleteAllInBatch();
     }
 
-
     @Nested
     class GetCakes {
 
         @Test
-        void returnsNoCakesWhenNoCakesArePresentInDatabase() {
+        void returnNoCakesWhenNoCakesArePresentInDatabase() {
             getCakesRequest()
                     .headers(CakeControllerTest.this::withBasicAuth)
                     .exchange()
@@ -49,7 +48,7 @@ class CakeControllerTest {
         }
 
         @Test
-        void returnsCakesOrderedByTitleWhenCakesArePresentInDatabase() {
+        void returnCakesOrderedByTitleWhenCakesArePresentInDatabase() {
 
             long id2 = givenTheFollowingCakeExistsInDatabase(aCake().title("some title 2").description(null).build()).getId();
             long id3 = givenTheFollowingCakeExistsInDatabase(aCake().title("some title 3").description("some description 3").build()).getId();
@@ -76,7 +75,7 @@ class CakeControllerTest {
         }
 
         @Test
-        void returnsUnauthorizedWhenAuthorizationHeaderIsMissing() {
+        void returnUnauthorizedWhenAuthorizationHeaderIsMissing() {
 
             getCakesRequest()
                     .exchange()
@@ -85,7 +84,7 @@ class CakeControllerTest {
         }
 
         @Test
-        void returnsUnauthorizedWhenUsernameAndPasswordAreIncorrect() {
+        void returnUnauthorizedWhenUsernameAndPasswordAreIncorrect() {
 
             getCakesRequest()
                     .headers(headers -> headers.setBasicAuth("some-incorrect-username", "some-incorrect-password"))
@@ -103,7 +102,7 @@ class CakeControllerTest {
     class GetCakeById {
 
         @Test
-        void getCakeById() {
+        void shouldSucceed() {
 
             long cakeId = givenTheFollowingCakeExistsInDatabase(aCake().title("some title").description("some description").build()).getId();
 
@@ -120,7 +119,7 @@ class CakeControllerTest {
         }
 
         @Test
-        void getCakeByIdReturnsNotFoundWhenCakeIsNotFound() {
+        void shouldReturnNotFoundWhenCakeIsNotFound() {
 
             getCakeByIdRequest(UNKNOWN_CAKE_ID)
                     .headers(CakeControllerTest.this::withBasicAuth)
@@ -130,7 +129,7 @@ class CakeControllerTest {
         }
 
         @Test
-        void returnsUnauthorizedWhenAuthorizationHeaderIsMissing() {
+        void returnUnauthorizedWhenAuthorizationHeaderIsMissing() {
 
             getCakeByIdRequest(UNKNOWN_CAKE_ID)
                     .exchange()
@@ -139,7 +138,7 @@ class CakeControllerTest {
         }
 
         @Test
-        void returnsUnauthorizedWhenUsernameAndPasswordAreIncorrect() {
+        void returnUnauthorizedWhenUsernameAndPasswordAreIncorrect() {
 
             getCakeByIdRequest(UNKNOWN_CAKE_ID)
                     .exchange()
@@ -156,7 +155,7 @@ class CakeControllerTest {
     class CreateCake {
 
         @Test
-        void createCake() {
+        void shouldSucceed() {
 
             createCakeRequest()
                     .headers(CakeControllerTest.this::withBasicAuth)
@@ -181,7 +180,7 @@ class CakeControllerTest {
         }
 
         @Test
-        void returnsUnauthorizedWhenAuthorizationHeaderIsMissing() {
+        void returnUnauthorizedWhenAuthorizationHeaderIsMissing() {
 
             createCakeRequest()
                     .contentType(APPLICATION_JSON)
@@ -195,7 +194,7 @@ class CakeControllerTest {
         }
 
         @Test
-        void returnsUnauthorizedWhenUsernameAndPasswordAreIncorrect() {
+        void returnUnauthorizedWhenUsernameAndPasswordAreIncorrect() {
 
             createCakeRequest()
                     .headers(headers -> headers.setBasicAuth("some-incorrect-username", "some-incorrect-password"))
@@ -218,8 +217,7 @@ class CakeControllerTest {
     class UpdateCake {
 
         @Test
-        void updateCake() {
-
+        void shouldSucceed() {
             long cakeId = givenTheFollowingCakeExistsInDatabase(aCake().title("existing title").description("existing description").build()).getId();
 
             updateCakeRequest(cakeId)
@@ -238,7 +236,7 @@ class CakeControllerTest {
         }
 
         @Test
-        void updateCakeReturnsNotFoundWhenCakeIsNotFound() {
+        void shouldReturnNotFoundWhenCakeIsNotFound() {
 
             updateCakeRequest(UNKNOWN_CAKE_ID)
                     .headers(CakeControllerTest.this::withBasicAuth)
@@ -253,7 +251,7 @@ class CakeControllerTest {
         }
 
         @Test
-        void returnsUnauthorizedWhenAuthorizationHeaderIsMissing() {
+        void returnUnauthorizedWhenAuthorizationHeaderIsMissing() {
 
             updateCakeRequest(UNKNOWN_CAKE_ID)
                     .contentType(APPLICATION_JSON)
@@ -267,7 +265,7 @@ class CakeControllerTest {
         }
 
         @Test
-        void returnsUnauthorizedWhenUsernameAndPasswordAreIncorrect() {
+        void returnUnauthorizedWhenUsernameAndPasswordAreIncorrect() {
 
             updateCakeRequest(UNKNOWN_CAKE_ID)
                     .headers(headers -> headers.setBasicAuth("some-incorrect-username", "some-incorrect-password"))
@@ -290,7 +288,7 @@ class CakeControllerTest {
     class DeleteCake {
 
         @Test
-        void deleteCake() {
+        void shouldSucceed() {
 
             long cakeId = givenTheFollowingCakeExistsInDatabase(aCake().title("existing title").description("existing description").build()).getId();
 
@@ -304,7 +302,7 @@ class CakeControllerTest {
         }
 
         @Test
-        void deleteCakeReturnsNotFoundWhenCakeIsNotFound() {
+        void shouldReturnNotFoundWhenCakeIsNotFound() {
 
             deleteCakeRequest(UNKNOWN_CAKE_ID)
                     .headers(CakeControllerTest.this::withBasicAuth)
@@ -314,7 +312,7 @@ class CakeControllerTest {
         }
 
         @Test
-        void returnsUnauthorizedWhenAuthorizationHeaderIsMissing() {
+        void returnUnauthorizedWhenAuthorizationHeaderIsMissing() {
 
             deleteCakeRequest(UNKNOWN_CAKE_ID)
                     .exchange()
@@ -323,7 +321,7 @@ class CakeControllerTest {
         }
 
         @Test
-        void returnsUnauthorizedWhenUsernameAndPasswordAreIncorrect() {
+        void returnUnauthorizedWhenUsernameAndPasswordAreIncorrect() {
 
             deleteCakeRequest(UNKNOWN_CAKE_ID)
                     .headers(headers -> headers.setBasicAuth("some-incorrect-username", "some-incorrect-password"))

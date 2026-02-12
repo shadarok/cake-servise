@@ -30,7 +30,7 @@ class CakeControllerV2Test {
     class GetCakeById {
 
         @Test
-        void getCakeByIdSuccessfully() {
+        void shouldSucceed() {
             // given
             long cakeId = 1L;
             stubFor(get(urlEqualTo("/cakes/" + cakeId))
@@ -59,7 +59,7 @@ class CakeControllerV2Test {
         }
 
         @Test
-        void getCakeByIdReturnsNotFoundWhenCakeIsNotFound() {
+        void shouldReturnNotFoundWhenCakeIsNotFound() {
             stubFor(get(urlEqualTo("/cakes/999"))
                     .willReturn(aResponse().withStatus(HttpStatus.NOT_FOUND.value())));
 
@@ -71,7 +71,7 @@ class CakeControllerV2Test {
         }
 
         @Test
-        void returnsUnauthorizedWhenAuthorizationHeaderIsMissing() {
+        void returnUnauthorizedWhenAuthorizationHeaderIsMissing() {
 
             getCakeByIdRequest(UNKNOWN_CAKE_ID)
                     .exchange()
@@ -80,7 +80,7 @@ class CakeControllerV2Test {
         }
 
         @Test
-        void returnsUnauthorizedWhenUsernameAndPasswordAreIncorrect() {
+        void returnUnauthorizedWhenUsernameAndPasswordAreIncorrect() {
 
             getCakeByIdRequest(UNKNOWN_CAKE_ID)
                     .exchange()
