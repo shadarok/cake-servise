@@ -8,8 +8,9 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
+import reactor.util.retry.Retry;
 
-import java.util.Map;
+import java.time.Duration;
 
 @Service
 @RequiredArgsConstructor
@@ -24,9 +25,11 @@ public class ExternalCakeService {
     public Mono<CakeResponse> getCakeById(long id) {
         return client
                 .get()
-                .uri(externalProviderUrl + "/{id}", Map.of("id", id))
+                .uri(externalProviderUrl + "/{id}", id)
                 .retrieve()
                 .bodyToMono(CakeResponse.class)
-                .onErrorResume(ex -> Mono.error(new CakeNotFoundException()));
+                .timeout(Duration.ofSeconds(1))
+                .retryWhen(Retry.backoff(2, Duration.ofMillis(500)))
+                .onErrorMap(ex -> new CakeNotFoundException());
     }
 }
