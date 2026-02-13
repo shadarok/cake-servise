@@ -22,14 +22,23 @@ public class ExternalCakeService {
     @Value("${cakes.external-provider.url}")
     private String externalProviderUrl;
 
+    @Value("${cakes.web-client.timeout-in-seconds}")
+    private Integer timeoutInSeconds;
+
+    @Value("${cakes.web-client.retry.max-attempts}")
+    private Integer maxRetries;
+
+    @Value("${cakes.web-client.retry.min-backoff-in-millis}")
+    private Integer minBackoffInMillis;
+
     public Mono<CakeResponse> getCakeById(long id) {
         return client
                 .get()
                 .uri(externalProviderUrl + "/{id}", id)
                 .retrieve()
                 .bodyToMono(CakeResponse.class)
-                .timeout(Duration.ofSeconds(1))
-                .retryWhen(Retry.backoff(2, Duration.ofMillis(500)))
+                .timeout(Duration.ofSeconds(timeoutInSeconds))
+                .retryWhen(Retry.backoff(maxRetries, Duration.ofMillis(minBackoffInMillis)))
                 .onErrorMap(ex -> new CakeNotFoundException());
     }
 }
