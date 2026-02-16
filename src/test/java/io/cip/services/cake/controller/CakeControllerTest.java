@@ -2,12 +2,18 @@ package io.cip.services.cake.controller;
 
 import io.cip.services.cake.CakeServiceSpringTest;
 import io.cip.services.cake.repository.CakeRepository;
-import net.minidev.json.JSONArray;
+import io.cip.services.cake.repository.model.Cake;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.reactive.server.WebTestClient;
+
+import static java.lang.Long.parseLong;
+import static org.assertj.core.api.Assertions.assertThat;
 
 
 /*
@@ -23,12 +29,7 @@ import org.springframework.test.web.reactive.server.WebTestClient;
  */
 
 @CakeServiceSpringTest
-
-//@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT) //<-
-//@AutoConfigureWebTestClient
-//@ActiveProfiles("test")
-
-class CakeServiceIntegrationTest {
+class CakeControllerTest {
 
     public static final String REQUEST_BODY = """
             {
@@ -38,180 +39,228 @@ class CakeServiceIntegrationTest {
             """;
 
     @Autowired
-    WebTestClient webTestClient;
+    private WebTestClient webTestClient;
+
+    @Autowired
+    private CakeRepository cakeRepository;
 
     @Value("${cakes.authentication.username}")
     private String userName;
     @Value("${cakes.authentication.password}")
     private String password;
 
-//    private static final String USERNAME = "cake-user-test";
-//    private static final String PASSWORD = "cake-password-test";
-
-    @Autowired
-    private CakeRepository cakeRepository;
-
-    @Test
-    void shouldReturnAllCakes() {
-        webTestClient
-                .get()
-                .uri("/cakes")
-                .headers(headers -> headers.setBasicAuth(userName, password))
-                .exchange()
-                .expectStatus().isOk()
-                .expectHeader().contentType("application/json")
-                .expectBody()
-                .jsonPath("$['cakes']").isArray();
+    @BeforeEach
+    void cleanup() {
+        cakeRepository.deleteAll();
     }
 
-    @Test
-    void createNewCakeRequest() {
+    @Nested
+    @DisplayName("Authorization tests")
+    class authorizationTests {
 
-        webTestClient
-                .post()
-                .uri("/cakes")
-                .headers(headers -> {
-                    headers.setBasicAuth(userName, password);
-                    headers.setContentType(MediaType.APPLICATION_JSON);
-                })
-                .bodyValue(CakeServiceIntegrationTest.REQUEST_BODY)
-                .exchange()
-                .expectStatus().isCreated()
-                .expectHeader().contentType(MediaType.APPLICATION_JSON)
-                .expectBody()
-                .jsonPath("$.title").isEqualTo("Protein cheesecake")
-                .jsonPath("$.description").isEqualTo("Best breakfast")
-                .jsonPath("$.id").isEqualTo(5);
+        @Test
+        void shouldReturnUnauthorizedWhenUnauthorized() {
+            webTestClient
+                    .get()
+                    .uri("/cakes")
+                    .exchange()
+                    .expectStatus().isUnauthorized()
+                    .expectBody().isEmpty();
+        }
     }
 
-    @Test
-    void shouldReturnCakeById() {
-        webTestClient
-                .get()
-                .uri("/cakes/{id}", 4)
-                .headers(headers -> headers.setBasicAuth(userName, password))
-                .exchange()
-                .expectStatus().isOk()
-                .expectBody()
-                .jsonPath("$['id']").isEqualTo(4)
-                .jsonPath("$['title']").isEqualTo("cake with extra field")
-                .jsonPath("$.description").isEqualTo("some desc 2");
+    @Nested
+    @DisplayName("GET all cakes")
+    class getRequestForAllCakes {
+
+        @Test
+        void shouldReturnAllCakes() {
+
+            var cakeId = cakeRepository.save(Cake.builder()
+                            .title("WZ")
+                            .description("Mniam")
+                            .build())
+                    .getId();
+
+            webTestClient
+                    .get()
+                    .uri("/cakes")
+                    .headers(headers -> headers.setBasicAuth(userName, password))
+                    .exchange()
+                    .expectStatus().isOk()
+                    .expectHeader().contentType("application/json")
+                    .expectBody()
+                    .jsonPath("$['cakes']").isArray()
+                    .jsonPath("$.cakes[0].id").isEqualTo(cakeId)
+                    .jsonPath("$.cakes[0].title").isEqualTo("WZ")
+                    .jsonPath("$.cakes[0].description").isEqualTo("Mniam");
+        }
+
+        @Test
+        void shouldReturnNotFoundWhenCakeIsNotFound() {
+            webTestClient
+                    .get()
+                    .uri("/cakes/{id}", 999)
+                    .headers(headers -> headers.setBasicAuth(userName, password))
+                    .exchange()
+                    .expectStatus().isNotFound()
+                    .expectBody().isEmpty();
+        }
     }
 
-    @Test
-    void shouldBeAbleToDeleteCake() {
+    @Nested
+    @DisplayName("GET cake by id")
+    class getRequestByCakeId {
 
-        createNewCakeRequest();
+        @Test
+        void shouldReturnCakeById() {
 
-        webTestClient
-                .delete()
-                .uri("/cakes/5")
-                .headers(headers -> {
-                    headers.setBasicAuth(userName, password);
-                    headers.setContentType(MediaType.APPLICATION_JSON);
-                })
-                .exchange()
-                .expectStatus().isNoContent()
-                .expectBody().isEmpty();
+            var cakeId = cakeRepository.save(Cake.builder()
+                            .title("WZ")
+                            .description("Mniam")
+                            .build())
+                    .getId();
 
-        webTestClient
-                .get()
-                .uri("/cakes/{id}", 5)
-                .headers(headers -> headers.setBasicAuth(userName, password))
-                .exchange()
-                .expectStatus().is4xxClientError();
+            webTestClient
+                    .get()
+                    .uri("/cakes/{id}", cakeId)
+                    .headers(headers -> headers.setBasicAuth(userName, password))
+                    .exchange()
+                    .expectStatus().isOk()
+                    .expectBody()
+                    .jsonPath("$['id']").isEqualTo(cakeId)
+                    .jsonPath("$['title']").isEqualTo("WZ")
+                    .jsonPath("$.description").isEqualTo("Mniam");
+        }
     }
 
-    @Test
-    void shouldReturnErrorWhenTryingToDeleteNonExistingCake() {
-        webTestClient
-                .delete()
-                .uri("/cakes/999")
-                .headers(headers -> {
-                    headers.setBasicAuth(userName, password);
-                    headers.setContentType(MediaType.APPLICATION_JSON);
-                })
-                .exchange()
-                .expectStatus().is4xxClientError();
+    @Nested
+    @DisplayName("POST a cake")
+    class postRequest {
+
+        @Test
+        void createNewCakeRequest() {
+
+            webTestClient
+                    .post()
+                    .uri("/cakes")
+                    .headers(headers -> {
+                        headers.setBasicAuth(userName, password);
+                        headers.setContentType(MediaType.APPLICATION_JSON);
+                    })
+                    .bodyValue(CakeControllerTest.REQUEST_BODY)
+                    .exchange()
+                    .expectStatus().isCreated()
+                    .expectHeader().contentType(MediaType.APPLICATION_JSON)
+                    .expectBody()
+                    .jsonPath("$.title").isEqualTo("Protein cheesecake")
+                    .jsonPath("$.description").isEqualTo("Best breakfast")
+                    .jsonPath("$.id").value(id -> {
+                        Cake newCake = cakeRepository.findById(parseLong(id.toString())).get();
+                        assertThat(newCake)
+                                .isEqualTo(new Cake(parseLong(id.toString()), "Protein cheesecake", "Best breakfast"));
+                    });
+        }
     }
 
-    // how to assert that the cake is actually gone-gone?
+    @Nested
+    @DisplayName("PUT a cake by id")
+    class putRequestByCakeId {
 
-    @Test
-    void shouldBeAbleToUpdateCake() {
+        @Test
+        void shouldBeAbleToUpdateCake() {
 
-        String requestBodyEdited = """
-                {
-                  "title": "Protein cheesecake EDIT",
-                  "description": "Best breakfast EDIT"
-                }
-                """;
+            String requestBodyEdited = """
+                    {
+                      "title": "Edited cake",
+                      "description": "Edited description"
+                    }
+                    """;
 
-        createNewCakeRequest();
+            var cakeId = cakeRepository.save(Cake.builder()
+                            .title("WZ")
+                            .description("Mniam")
+                            .build())
+                    .getId();
 
-        webTestClient
-                .put()
-                .uri("/cakes/5")
-                .headers(headers -> {
-                    headers.setBasicAuth(userName, password);
-                    headers.setContentType(MediaType.APPLICATION_JSON);
-                })
-                .bodyValue(requestBodyEdited)
-                .exchange()
-                .expectStatus().is2xxSuccessful();
+            webTestClient
+                    .put()
+                    .uri("/cakes/{id}", cakeId)
+                    .headers(headers -> {
+                        headers.setBasicAuth(userName, password);
+                        headers.setContentType(MediaType.APPLICATION_JSON);
+                    })
+                    .bodyValue(requestBodyEdited)
+                    .exchange()
+                    .expectStatus().is2xxSuccessful();
 
-        webTestClient
-                .get()
-                .uri("/cakes/{id}", 5)
-                .headers(headers -> headers.setBasicAuth(userName, password))
-                .exchange()
-                .expectStatus().isOk()
-                .expectBody()
-                .jsonPath("$['id']").isNotEmpty()
-                .jsonPath("$['title']").isEqualTo("Protein cheesecake EDIT")
-                .jsonPath("$.description").isEqualTo("Best breakfast EDIT");
+            Cake savedCake = cakeRepository.findById(cakeId).get();
+            assertThat(savedCake).isEqualTo(new Cake(cakeId, "Edited cake", "Edited description"));
+
+        }
+
+        @Test
+        void shouldReturnNotFoundWhenTryingToUpdateNonExistingCake() {
+
+            String requestBodyEdited = """
+                    {
+                      "title": "Protein cheesecake EDIT",
+                      "description": "Best breakfast EDIT"
+                    }
+                    """;
+
+            webTestClient
+                    .put()
+                    .uri("/cakes/999")
+                    .headers(headers -> {
+                        headers.setBasicAuth(userName, password);
+                        headers.setContentType(MediaType.APPLICATION_JSON);
+                    })
+                    .bodyValue(requestBodyEdited)
+                    .exchange()
+                    .expectStatus().isNotFound();
+        }
     }
 
-    @Test
-    void shouldReturnNotFoundWhenTryingToUpdateNonExistingCake() {
+    @Nested
+    @DisplayName("DELETE a cake by id")
+    class deleteRequestByCakeId {
 
-        String requestBodyEdited = """
-                {
-                  "title": "Protein cheesecake EDIT",
-                  "description": "Best breakfast EDIT"
-                }
-                """;
+        @Test
+        void shouldBeAbleToDeleteCake() {
 
-        webTestClient
-                .put()
-                .uri("/cakes/999")
-                .headers(headers -> {
-                    headers.setBasicAuth(userName, password);
-                    headers.setContentType(MediaType.APPLICATION_JSON);
-                })
-                .bodyValue(requestBodyEdited)
-                .exchange()
-                .expectStatus().is4xxClientError();
-    }
+            var cakeId = cakeRepository.save(Cake.builder()
+                            .title("WZ")
+                            .description("Mniam")
+                            .build())
+                    .getId();
 
+            webTestClient
+                    .delete()
+                    .uri("/cakes/{id}", cakeId)
+                    .headers(headers -> {
+                        headers.setBasicAuth(userName, password);
+                        headers.setContentType(MediaType.APPLICATION_JSON);
+                    })
+                    .exchange()
+                    .expectStatus().isNoContent()
+                    .expectBody().isEmpty();
 
-    @Test
-    void shouldReturnNotFoundWhenCakeIsNotFound() {
-        webTestClient
-                .get()
-                .uri("/cakes/{id}", 999)
-                .exchange()
-                .expectStatus().is4xxClientError()
-                .expectBody().isEmpty();
-    }
+            assertThat(cakeId).isNotIn(cakeRepository);
 
-    @Test
-    void shouldReturnUnauthorizedWhenUnauthorized() {
-        webTestClient
-                .get()
-                .uri("/cakes")
-                .exchange()
-                .expectStatus().isUnauthorized()
-                .expectBody().isEmpty();
+        }
+
+        @Test
+        void shouldReturnErrorWhenTryingToDeleteNonExistingCake() {
+            webTestClient
+                    .delete()
+                    .uri("/cakes/999")
+                    .headers(headers -> {
+                        headers.setBasicAuth(userName, password);
+                        headers.setContentType(MediaType.APPLICATION_JSON);
+                    })
+                    .exchange()
+                    .expectStatus().is4xxClientError();
+        }
     }
 }
