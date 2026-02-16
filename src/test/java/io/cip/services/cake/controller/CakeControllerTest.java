@@ -246,7 +246,7 @@ class CakeControllerTest {
                     .expectStatus().isNoContent()
                     .expectBody().isEmpty();
 
-            assertThat(cakeId).isNotIn(cakeRepository);
+            assertThat(cakeRepository.findById(cakeId)).isNotPresent();
 
         }
 
