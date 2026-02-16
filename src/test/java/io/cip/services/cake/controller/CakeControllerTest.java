@@ -56,7 +56,7 @@ class CakeControllerTest {
 
     @Nested
     @DisplayName("Authorization tests")
-    class authorizationTests {
+    class AuthorizationTests {
 
         @Test
         void shouldReturnUnauthorizedWhenUnauthorized() {
@@ -67,11 +67,26 @@ class CakeControllerTest {
                     .expectStatus().isUnauthorized()
                     .expectBody().isEmpty();
         }
+
+        @Test
+        void shouldNotAuthorizeWithWrongCredentials() {
+
+            var wrongUsername = "wrong-user";
+            var wrongPassword = "wrong-password";
+
+            webTestClient
+                    .get()
+                    .uri("/cakes")
+                    .headers(headers -> headers.setBasicAuth(wrongUsername, wrongPassword))
+                    .exchange()
+                    .expectStatus().isUnauthorized()
+                    .expectBody().isEmpty();
+        }
     }
 
     @Nested
     @DisplayName("GET all cakes")
-    class getRequestForAllCakes {
+    class GetRequestForAllCakes {
 
         @Test
         void shouldReturnAllCakes() {
@@ -90,27 +105,17 @@ class CakeControllerTest {
                     .expectStatus().isOk()
                     .expectHeader().contentType("application/json")
                     .expectBody()
-                    .jsonPath("$['cakes']").isArray()
+                    .jsonPath("$.cakes").isArray()
                     .jsonPath("$.cakes[0].id").isEqualTo(cakeId)
                     .jsonPath("$.cakes[0].title").isEqualTo("WZ")
                     .jsonPath("$.cakes[0].description").isEqualTo("Mniam");
         }
 
-        @Test
-        void shouldReturnNotFoundWhenCakeIsNotFound() {
-            webTestClient
-                    .get()
-                    .uri("/cakes/{id}", 999)
-                    .headers(headers -> headers.setBasicAuth(userName, password))
-                    .exchange()
-                    .expectStatus().isNotFound()
-                    .expectBody().isEmpty();
-        }
     }
 
     @Nested
     @DisplayName("GET cake by id")
-    class getRequestByCakeId {
+    class GetRequestByCakeId {
 
         @Test
         void shouldReturnCakeById() {
@@ -128,15 +133,26 @@ class CakeControllerTest {
                     .exchange()
                     .expectStatus().isOk()
                     .expectBody()
-                    .jsonPath("$['id']").isEqualTo(cakeId)
-                    .jsonPath("$['title']").isEqualTo("WZ")
+                    .jsonPath("$.id").isEqualTo(cakeId)
+                    .jsonPath("$.title").isEqualTo("WZ")
                     .jsonPath("$.description").isEqualTo("Mniam");
+        }
+
+        @Test
+        void shouldReturnNotFoundWhenCakeIsNotFound() {
+            webTestClient
+                    .get()
+                    .uri("/cakes/{id}", 999)
+                    .headers(headers -> headers.setBasicAuth(userName, password))
+                    .exchange()
+                    .expectStatus().isNotFound()
+                    .expectBody().isEmpty();
         }
     }
 
     @Nested
     @DisplayName("POST a cake")
-    class postRequest {
+    class PostRequest {
 
         @Test
         void createNewCakeRequest() {
@@ -165,7 +181,7 @@ class CakeControllerTest {
 
     @Nested
     @DisplayName("PUT a cake by id")
-    class putRequestByCakeId {
+    class PutRequestByCakeId {
 
         @Test
         void shouldBeAbleToUpdateCake() {
@@ -224,7 +240,7 @@ class CakeControllerTest {
 
     @Nested
     @DisplayName("DELETE a cake by id")
-    class deleteRequestByCakeId {
+    class DeleteRequestByCakeId {
 
         @Test
         void shouldBeAbleToDeleteCake() {
