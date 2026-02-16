@@ -1,6 +1,8 @@
 package io.cip.services.cake.controller;
 
 import io.cip.services.cake.CakeServiceSpringTest;
+import io.cip.services.cake.model.cake.CakeResponse;
+import io.cip.services.cake.model.cake.CakesResponse;
 import io.cip.services.cake.repository.CakeRepository;
 import io.cip.services.cake.repository.model.Cake;
 import org.junit.jupiter.api.BeforeEach;
@@ -59,19 +61,16 @@ class CakeControllerTest {
                     .exchange()
                     .expectStatus().isOk()
                     .expectHeader().contentType(APPLICATION_JSON)
-                    .expectBody()
-                    //
-                    .jsonPath("$.cakes[0].id").isEqualTo(id1)
-                    .jsonPath("$.cakes[0].title").isEqualTo("some title 1")
-                    .jsonPath("$.cakes[0].description").isEqualTo("some description 1")
-                    //
-                    .jsonPath("$.cakes[1].id").isEqualTo(id2)
-                    .jsonPath("$.cakes[1].title").isEqualTo("some title 2")
-                    .jsonPath("$.cakes[1].description").isEmpty()
-                    //
-                    .jsonPath("$.cakes[2].id").isEqualTo(id3)
-                    .jsonPath("$.cakes[2].title").isEqualTo("some title 3")
-                    .jsonPath("$.cakes[2].description").isEqualTo("some description 3");
+                    .expectBody(CakesResponse.class)
+                    .value(response ->
+                            assertThat(response.cakes())
+                                    .usingRecursiveFieldByFieldElementComparator()
+                                    .containsExactlyInAnyOrder(
+                                            new CakeResponse(id1, "some title 1", "some description 1"),
+                                            new CakeResponse(id2, "some title 2", null),
+                                            new CakeResponse(id3, "some title 3", "some description 3")
+                                    )
+                    );
         }
 
         @Test
