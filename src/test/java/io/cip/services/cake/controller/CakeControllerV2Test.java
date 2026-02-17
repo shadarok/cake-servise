@@ -4,21 +4,15 @@ import io.cip.services.cake.CakeServiceSpringTest;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cloud.contract.wiremock.AutoConfigureWireMock;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
-import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.reactive.server.WebTestClient;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 
 @CakeServiceSpringTest
-@AutoConfigureWireMock(port = 0)
-@TestPropertySource(properties = {
-        "cakes.external-provider.url=http://localhost:${wiremock.server.port}/cakes"
-})
 class CakeControllerV2Test {
 
     public static final int UNKNOWN_CAKE_ID = 9999999;
@@ -59,7 +53,7 @@ class CakeControllerV2Test {
         }
 
         @Test
-        void shouldReturnNotFoundWhenCakeIsNotFound() {
+        void shouldReturn404NotFoundWhenCakeIsNotFound() {
             stubFor(get(urlEqualTo("/cakes/999"))
                     .willReturn(aResponse().withStatus(HttpStatus.NOT_FOUND.value())));
 
@@ -71,7 +65,7 @@ class CakeControllerV2Test {
         }
 
         @Test
-        void returnUnauthorizedWhenAuthorizationHeaderIsMissing() {
+        void shouldReturn401UnauthorizedWhenAuthorizationHeaderIsMissing() {
 
             getCakeByIdRequest(UNKNOWN_CAKE_ID)
                     .exchange()
@@ -80,7 +74,7 @@ class CakeControllerV2Test {
         }
 
         @Test
-        void returnUnauthorizedWhenUsernameAndPasswordAreIncorrect() {
+        void shouldReturn401UnauthorizedWhenUsernameAndPasswordAreIncorrect() {
 
             getCakeByIdRequest(UNKNOWN_CAKE_ID)
                     .exchange()
