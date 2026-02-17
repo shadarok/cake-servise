@@ -27,9 +27,6 @@ class CakeControllerV2AsyncTest {
 
     public static final int UNKNOWN_CAKE_ID = 9999999;
 
-    @LocalServerPort
-    private int port;
-
     @Autowired
     private WebTestClient httpClient;
 
