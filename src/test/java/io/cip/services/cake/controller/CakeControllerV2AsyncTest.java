@@ -23,10 +23,6 @@ import static org.awaitility.Awaitility.await;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 
 @CakeServiceSpringTest
-@AutoConfigureWireMock(port = 0)
-@TestPropertySource(properties = {
-        "cakes.external-provider.url=http://localhost:${wiremock.server.port}/cakes"
-})
 class CakeControllerV2AsyncTest {
 
     public static final int UNKNOWN_CAKE_ID = 9999999;
